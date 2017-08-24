@@ -21,22 +21,15 @@ def get_count(item, d):
 
 
 def remove_duplicate_item(data):
-	from copy import deepcopy
-	kk = deepcopy(data)
-	for i in range(len(kk)):
-		for each_data in kk:
-			if kk[i] in each_data and kk.index(each_data) != i:
-				print(each_data, i)
-				data.remove(kk[i])
-				break
+	from collections import OrderedDict
+	data = [''.join(OrderedDict.fromkeys(_)) for _ in data]
 	return data
-
 
 def clean_input(data):
 	"""
 	remove duplicate letter,sort in the order of information amount
 	"""
-	data = get_proper_order(remove_duplicate_item(data))
+	data = remove_duplicate_item(data)
 	return data
 
 
@@ -55,23 +48,23 @@ def find_duplicate(result, data=None):
 			return [is_duplicate, 0, 0]
 		else:
 			for letter in strip_mark_result:
-				if strip_mark_result.count(result) == 2:
+				if strip_mark_result.count(letter) == 2:
 					is_duplicate = True
 					first_index = strip_mark_result.index(letter)
-					second_index = strip_mark_result[first_index:].index(letter) + first_index
+					second_index = strip_mark_result[first_index+1:].index(letter) + first_index + 1
 					return [is_duplicate, first_index, second_index]
 	else:
 		for letter in data:
 			if letter in strip_mark_result:
 				is_duplicate = True
-				result_mark = result[strip_mark_result.index(letter)][1]
+				result_mark = result[strip_mark_result.index(letter)][1:]
 				data_mark = next(mark)
 				return [is_duplicate, result_mark, str(data_mark)]
 		data_mark = next(mark)
 		return [is_duplicate, None, str(data_mark)]
 
 
-def result_self_clean(result, index1, index2):
+def result_self_clean(result, index1, index2, origin_data):
 	"""
 	result may have same letter after be merged with data.
 	remove the duplicate letter .
@@ -80,13 +73,25 @@ def result_self_clean(result, index1, index2):
 	"""
 	_mark_1 = result[index1][1:]
 	_mark_2 = result[index2][1:]
+	duplicate_letter = result[index1][0]
 	chunk1 = [_ for _ in result if _[1:] == _mark_1]
 	chunk2 = [_ for _ in result if _[1:] == _mark_2]
-	print(chunk1, chunk2, 'chunk')
+	index1, index2 = result.index(chunk1[0]), result.index(chunk2[0])
 	new = mark_merge(chunk1, chunk2)
-	print(new)
-	print(result[:index1], new, result[index1+len(chunk1)+1:index2], result[index2+len(chunk2):])
-	return list(result[:index1]) + new + list(result[index1+len(chunk1)+1:index2]) + list(result[index2+len(chunk2):])
+	print(chunk1,chunk2,duplicate_letter)
+	print(new,'merge chunk')
+	ret = list(result[:index1]) + new + list(result[index1 + len(chunk1):index2]) + list(result[index2 + len(chunk2):])
+	for _ in list(result[index1 + len(chunk1):index2]):
+		for each_data in origin_data:
+			if _[0] in each_data and duplicate_letter in each_data:
+				if each_data.index(_[0]) < each_data.index(duplicate_letter):
+					ret = list(result[:index1]) + list(result[index1 + len(chunk1):index2]) + new + list(
+						result[index2 + len(chunk2):])
+					return ret
+				else:
+					ret = list(result[:index1]) + new + list(result[index1 + len(chunk1):index2]) + list(result[index2 + len(chunk2):])
+					return ret
+	return ret
 
 
 def origin_taste(result):
@@ -120,6 +125,10 @@ def mark_merge(data1, data2):
 	:param data2: list2 with mark2
 	:return: merge list with new mark(may be lots of marks)
 	"""
+	if len(data1) == 1:
+		return data2
+	if len(data2) == 1:
+		return data1
 	strip_data1, strip_data2 = [_[0] for _ in data1], [_[0] for _ in data2]
 	for data_index, letter in enumerate(strip_data2):
 		if letter in strip_data1:
@@ -128,45 +137,71 @@ def mark_merge(data1, data2):
 			chunk_data1_left = [_+_mark for _ in strip_data1[:insert_index]]
 			_mark = str(next(mark))
 			chunk_data1_right = [_+_mark for _ in strip_data1[insert_index+1:]]
+			middle = [letter+str(next(mark))]
 			_mark = str(next(mark))
 			chunk_data2_left = [_+_mark for _ in strip_data2[:data_index]]
 			_mark = str(next(mark))
 			chunk_data2_right = [_+_mark for _ in strip_data2[data_index+1:]]
-			print(chunk_data1_left,chunk_data2_left,chunk_data1_right,chunk_data2_right,99999999)
-			chunks = [*sorted([chunk_data1_left, chunk_data2_left]), [letter+str(next(mark))], *sorted([chunk_data1_right, chunk_data2_right])]
+			chunks = [*sorted([chunk_data1_left, chunk_data2_left]), middle, *sorted([chunk_data1_right, chunk_data2_right])]
 			from itertools import chain
 			ret = []
-			[ret.extend(_) for _ in chain(chunks)]
+			[ret.extend(_) for _ in chain(chunks) if _]
+			if not chunk_data1_right and not chunk_data2_left or not chunk_data1_left and not chunk_data2_right:
+				# just connect,unify the mark
+				_mark = str(next(mark))
+				for _ in range(len(ret)):
+					ret[_] = ret[_][0] + _mark
+				return ret
 			return ret
 
 
 def checkio(inpt):
+	dummy_flag = True
 	inpt = clean_input(inpt)
 	_mark = next(mark)
 	result = [_+str(_mark) for _ in inpt[0]]
+	from copy import deepcopy
+	origin_data = deepcopy(inpt)
 	for each_data in inpt[1:]:
 		is_duplicate, result_mark, data_mark = find_duplicate(result, each_data)
 		if not is_duplicate:
 			[result.append(i+data_mark) for i in each_data]
 		else:
-			result_chunk = [letter for letter in result if letter.endwith(result_mark)]
+			dummy_flag = False
+			result_chunk = [letter for letter in result if letter[1:] == result_mark]
 			to_be_merge_chunk = [letter+data_mark for letter in each_data]
-			start, end = result.index(result_mark[0]), result.index(result_mark[-1])
+			print(result_chunk,to_be_merge_chunk,'while join result and data')
+			start, end = result.index(result_chunk[0]), result.index(result_chunk[-1])
 			new_chunk = mark_merge(result_chunk, to_be_merge_chunk)
-			result = result[:start] + new_chunk + result[end:]
+			result = result[:start] + new_chunk + result[end+1:]
 			duplicate_flag = True
 			while duplicate_flag:
 				duplicate_flag, index1, index2 = find_duplicate(result)
 				if not duplicate_flag:
 					break
 				else:
-					result = result_self_clean(result, index1, index2)
-	return result
+					print('self clean',result, ''.join([_[0] for _ in result]))
+					result = result_self_clean(result, index1, index2, origin_data)
+		print(result,'result after join')
+	if dummy_flag:
+		ret = ''
+		for _ in sorted(origin_data):
+			for letter in _:
+				ret += letter
+		return ret
+	return ''.join([_[0] for _ in result])
 
 
 # a = origin_taste(['a0','c0','b11','d11','g3','k4','f4'])
 # print(a)
 # b = mark_merge(['a1','b1','t1'], ['i2','b2','c2','g2'])
 # print(b)
-c = result_self_clean(['ax','cx','ay','dy','gp','kq','fq'],0,2)
-print(c)
+# c = result_self_clean(['ax','cx','ay','dy','gp','kq','fq'],0,2)
+# print(c)
+# print(checkio(["acb", "bd", "zwa"]))
+# print(checkio(["dfg", "frt", "tyg"]))
+# print(checkio(["klm","kadl","lsm"]))
+# print(checkio(["is","not","abc","nots","iabcn"]))
+# print(checkio(["b","d","a"]))
+# print(checkio(["ghi","abc","def"]))
+print(checkio(["hfecba","hgedba","hgfdca"]))
