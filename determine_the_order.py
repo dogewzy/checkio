@@ -63,4 +63,33 @@ def checkio(data):
 	if order:
 		isolate_part.add(order)
 	result = process_isolate_part(isolate_part)
+	return ''.join(result)
+
+
+# others solution: more efficient and readable
+def checkio2(data):
+	alphabet = sorted(set(''.join(data)))  # unique alphabet
+	result = ''
+	while len(result) != len(alphabet):
+		# find minimum
+		for c in alphabet:
+			if c in result:
+				continue  # already used
+			if all(c not in word or c == word[0] for word in data):
+				break  # found
+		result += c
+		# remove c from data
+		for i in range(len(data)): data[i] = data[i].replace(c, '')
 	return result
+
+	# import time
+	# start = time.time()
+	# q=checkio(['adf','lpoka','cbn'])
+	# print(q)
+	# end = time.time()
+	# print(end-start)
+	# start = time.time()
+	# o=checkio2(['adf','lpoka','cbn'])
+	# print(o)
+	# end = time.time()
+	# print(end-start)
