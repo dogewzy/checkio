@@ -8,6 +8,15 @@ def stone_wall(wall):
 
     return result.index(min(result))
 
+# best solution
+# 这里的zip函数非常巧妙的把列表转置了！
+
+
+def stone_wall_best(wall):
+    wall = list(zip(*wall.split()))
+    print(wall)
+    return wall.index(min(wall, key=lambda x: x.count('#')))
+
 
 if __name__ == '__main__':
     print("Example:")
