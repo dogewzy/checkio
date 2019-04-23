@@ -49,3 +49,16 @@ if __name__ == '__main__':
     细节上依然考虑不周，没有考虑到多组同值的情况，这里还得取一个最小值
     如果用遍历，加上最小值flag，就不会碰到这个问题，但是也会冗余的去做一些计算吧……
 """
+
+
+# best solution
+
+def wild_dogs_best(coords):
+    from itertools import combinations
+    result = []
+    for (x0, y0), (x1, y1) in combinations(coords, 2):
+        A, B, C = y0 - y1, x1 - x0, y0 * (x0 - x1) - x0 * (y0 - y1)
+        distance = abs(C) / (A ** 2 + B ** 2) ** 0.5
+        result += [(distance, (1, B / A, C / A) if A else (A / B, 1, C / B))]
+    distance, *_ = max(result, key=lambda x: (result.count(x), -x[0]))
+    return round(distance, 2)
