@@ -1,4 +1,5 @@
 # 情况是复杂又恶心
+# 尝试rsplit
 def safe_code(equation):
     from operator import mul, sub, truediv, add
     opt_dict = {
