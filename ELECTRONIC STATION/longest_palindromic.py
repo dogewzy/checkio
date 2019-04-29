@@ -21,7 +21,14 @@ def longest_palindromic(text):
 
 
 # 算法讲解 https://segmentfault.com/a/1190000003914228
-print(longest_palindromic("abbacc"))
+print(longest_palindromic("abbacccccc"))
+
+"""
+加#的原因是，让所有的input长度都变成奇数，这样回文中点就是一个字符而不是字符的中间
+code review
+1
+    line:5  for index, _ in enumerate(text): 直接用range就好了
+"""
 
 # checkio中的最优解是……暴力解法
 from itertools import combinations as C
