@@ -9,6 +9,7 @@ class BinaryTreeNode:
     我们从顶往下算
     为什么不从底向上，因为这样还要判断其在父节点的哪一边，而且还得先遍历一遍
     """
+
     def __repr__(self):
         # 打印出来
 
@@ -28,10 +29,11 @@ class BinaryTreeNode:
                                 sum([[node.left, node.right] for node in level[now_level - 1]], [])
                                 if node]
             for node in level[now_level]:
+                offset = 2 ** (self.tree_depth - now_level - 1)
                 if node == node.parent.left:
-                    node.position = node.parent.position - 2**(self.tree_depth - now_level - 1)
+                    node.position = node.parent.position - offset
                 if node == node.parent.right:
-                    node.position = node.parent.position + 2**(self.tree_depth - now_level - 1)
+                    node.position = node.parent.position + offset
         return '\n'.join(every_lines)
 
     def __bool__(self):
@@ -44,7 +46,8 @@ class BinaryTreeNode:
     @left.setter
     def left(self, node):
         self._left = node
-        node.parent = self
+        if node is not None:
+            node.parent = self
 
     @property
     def right(self):
@@ -53,7 +56,8 @@ class BinaryTreeNode:
     @right.setter
     def right(self, node):
         self._right = node
-        node.parent = self
+        if node is not None:
+            node.parent = self
 
     @property
     def depth(self):
@@ -94,10 +98,11 @@ class ListNode:
         self.next = next
 
 
-b = BinaryTreeNode(5)
-b.left = BinaryTreeNode(4)
-b.right = BinaryTreeNode(3)
-b.right.right = BinaryTreeNode(2)
-b.left.left = BinaryTreeNode(6)
-b.left.left.right = BinaryTreeNode(7)
-print(b)
+if __name__ == '__main__':
+    b = BinaryTreeNode(5)
+    b.left = BinaryTreeNode(4)
+    b.right = BinaryTreeNode(3)
+    b.right.right = BinaryTreeNode(2)
+    b.left.left = BinaryTreeNode(6)
+    b.left.left.right = BinaryTreeNode(7)
+    print(b)
